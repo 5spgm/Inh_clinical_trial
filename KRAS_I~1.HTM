@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRAS阻害薬 臨床開発パイプライン・ダッシュボード</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --sub:#5b5f66; --line:#e4e6ea; --bg:#fbfbfb; --card:#ffffff;
+    --accent:#2b6cb0; --green:#0f7a4d; --greenbg:#e9f7ef; --greenline:#bfe3cc;
+    --amber:#b7791f; --amberbg:#fff8ec; --amberline:#f2d59e;
+    --red:#b42318; --redbg:#fef3f2; --redline:#f4c7c2;
+    --dot1:#2b6cb0; /* G12C選択的 */
+    --dot2:#c0752b; /* G12D選択的 */
+    --dot3:#1a7f5a; /* Pan-RAS/Pan-KRAS */
+    --dot4:#8e44ad; /* SOS1 */
+    --dot5:#148f77; /* SHP2 */
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;
+    line-height:1.55;
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:36px 24px 80px;}
+  h1{font-size:26px; font-weight:700; margin:0 0 10px;}
+  .desc{color:var(--sub); font-size:15px; max-width:780px; margin:0 0 18px;}
+  .meta{font-size:13px; color:var(--sub); margin-bottom:26px;}
+  .meta b{color:var(--ink); font-weight:600;}
+  .meta span{margin-right:18px;}
+
+  .topics{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px;}
+  .topic{border-radius:10px; padding:14px 16px; border:1px solid;}
+  .topic.pos{background:var(--greenbg); border-color:var(--greenline);}
+  .topic.warn{background:var(--amberbg); border-color:var(--amberline);}
+  .topic.neg{background:var(--redbg); border-color:var(--redline);}
+  .topic .tag{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:4px; margin-bottom:7px;}
+  .topic.pos .tag{background:var(--green); color:#fff;}
+  .topic.warn .tag{background:var(--amber); color:#fff;}
+  .topic.neg .tag{background:var(--red); color:#fff;}
+  .topic h4{margin:0 0 5px; font-size:13.5px;}
+  .topic p{margin:0; font-size:12px; color:#4a4d52;}
+
+  .stats{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:22px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+  .stat .label{font-size:12.5px; color:var(--sub); margin-bottom:8px;}
+  .stat .num{font-size:26px; font-weight:700;}
+  .stat .sub{font-size:11.5px; color:var(--sub); margin-top:4px;}
+
+  details.methodology{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:14px 18px; margin-bottom:26px; font-size:13.5px;
+  }
+  details.methodology summary{cursor:pointer; font-weight:600; font-size:14px; list-style:revert;}
+  details.methodology .body{margin-top:12px; color:var(--sub);}
+  details.methodology ul{margin:8px 0 0; padding-left:20px;}
+  details.methodology li{margin-bottom:4px;}
+
+  section{margin-bottom:34px;}
+  h2{font-size:18px; margin:0 0 4px;}
+  .section-note{font-size:12.5px; color:var(--sub); margin:0 0 14px;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:14px; font-size:12.5px; color:var(--sub); margin-bottom:10px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0;}
+
+  .pipeline{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; overflow-x:auto;}
+  table.pipe{width:100%; border-collapse:collapse; min-width:920px;}
+  table.pipe th{
+    text-align:left; font-size:11px; color:var(--sub); font-weight:600; letter-spacing:.03em;
+    padding:6px 8px; border-bottom:1px solid var(--line); text-transform:uppercase;
+  }
+  table.pipe td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:middle; font-size:13.5px;}
+  table.pipe tr:last-child td{border-bottom:none;}
+  .mol{font-weight:600;}
+  .company{font-size:11.5px; color:var(--sub); display:block;}
+  .stagebar{position:relative; height:8px; background:#eef0f2; border-radius:4px; width:220px;}
+  .stagebar .fill{position:absolute; top:0; left:0; height:8px; border-radius:4px;}
+  .stagebar .wmark{
+    position:absolute; top:-4px; width:16px; height:16px; border-radius:50%;
+    background:var(--red); color:#fff; font-size:10px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; transform:translateX(-50%);
+  }
+  .stagelabels{display:flex; justify-content:space-between; width:220px; font-size:9.5px; color:#9aa0a6; margin-top:3px;}
+  .badge{display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; margin-top:6px;}
+  .b-approved{background:#e6f4ec; color:var(--green);}
+  .b-caution{background:var(--amberbg); color:var(--amber);}
+  .b-p3{background:#eaf1fb; color:var(--accent);}
+  .b-p12{background:#f2f2f2; color:#555;}
+  .b-terminated{background:#f2f2f2; color:#888;}
+  .trials-link{color:var(--accent); text-decoration:none; font-weight:600;}
+  .trials-link:hover{text-decoration:underline;}
+
+  .timeline{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px;}
+  .tl-item{display:flex; gap:16px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .tl-item:last-child{border-bottom:none;}
+  .tl-date{width:110px; flex-shrink:0; font-size:12.5px; font-weight:700; color:var(--sub);}
+  .tl-body h4{margin:0 0 3px; font-size:14px;}
+  .tl-body p{margin:0; font-size:13px; color:var(--sub);}
+  .tl-tag{font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:10px; margin-left:8px; vertical-align:1px;}
+  .tag-safety{background:var(--redbg); color:var(--red);}
+  .tag-approval{background:#e6f4ec; color:var(--green);}
+  .tag-reg{background:#eaf1fb; color:var(--accent);}
+  .tag-data{background:var(--amberbg); color:var(--amber);}
+
+  .indications{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  .ind-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+  .ind-card h4{margin:0 0 8px; font-size:13.5px;}
+  .ind-row{display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; color:var(--sub); gap:10px;}
+  .ind-row b{color:var(--ink); font-weight:600; text-align:right;}
+  .ind-note{font-size:11.5px; color:#9aa0a6; margin-top:10px; border-top:1px dashed var(--line); padding-top:8px;}
+
+  footer{font-size:11.5px; color:#9aa0a6; margin-top:40px; border-top:1px solid var(--line); padding-top:16px;}
+
+  @media (max-width:820px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .topics{grid-template-columns:1fr;}
+    .indications{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>KRAS阻害薬 臨床開発パイプライン・ダッシュボード</h1>
+  <p class="desc">
+    KRAS（G12C変異陽性・非G12C変異〈G12D/G12V/G13Dなど〉を問わず）を標的とする低分子阻害薬・分解薬・SOS1/SHP2阻害薬併用戦略の
+    Phase 1–3 臨床試験を対象に、悪性腫瘍領域（血液腫瘍・軟部肉腫を含む）における開発状況を整理したものです。
+  </p>
+  <div class="meta">
+    <span><b>データ基準日:</b> 2026年8月12日</span>
+    <span><b>更新方式:</b> 手動スナップショット（自動更新なし）</span>
+    <span><b>主な情報源:</b> ClinicalTrials.gov 検索結果の手集計 + 公開文献・プレスリリース</span>
+  </div>
+
+  <div class="topics">
+    <div class="topic pos">
+      <span class="tag">Phase3成功</span>
+      <h4>Daraxonrasib、膵癌でOS有意改善</h4>
+      <p>Revolution Medicines社のpan-RAS(ON)阻害薬が既治療の転移性膵管腺癌でOS中央値13.2ヶ月 vs 化学療法6.7ヶ月(死亡リスク60%減)。優先審査バウチャーでのNDA申請を2026年4月に表明。</p>
+    </div>
+    <div class="topic warn">
+      <span class="tag">規制上の停滞</span>
+      <h4>Sotorasibの本承認が未達成</h4>
+      <p>FDAは本承認申請(sNDA)を却下し、2028年2月までの追加確認試験完了を新たな市販後要求として課した。加速承認自体は維持。</p>
+    </div>
+    <div class="topic neg">
+      <span class="tag">開発中止</span>
+      <h4>Novartis、Opnurasib(JDQ443)を中止</h4>
+      <p>戦略的ポートフォリオ見直しにより、Phase3 KontRASt-02試験を含む全試験を終了。次世代G12C阻害薬競争の激しさを象徴する撤退。</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="label">主要12分子の重複除去後試験数</div><div class="num">153</div><div class="sub">Phase1–3・介入試験</div></div>
+    <div class="stat"><div class="label">うち現在募集中</div><div class="num">約53</div><div class="sub">Recruiting</div></div>
+    <div class="stat"><div class="label">Phase 3 到達</div><div class="num">5</div><div class="sub">分子数(中止1含む)</div></div>
+    <div class="stat"><div class="label">承認済み分子</div><div class="num">4</div><div class="sub">Sotorasib・Adagrasib・Garsorasib・Glecirasib</div></div>
+    <div class="stat"><div class="label">追跡中の分子数</div><div class="num">16</div><div class="sub">SOS1・SHP2併用薬を含む</div></div>
+  </div>
+
+  <details class="methodology">
+    <summary>方法論・スコープ・限界事項</summary>
+    <div class="body">
+      <p>
+        「KRAS」単独でのClinicalTrials.gov検索はバイオマーカーとしての組み入れ基準に使われる試験(ワクチン、TCR-T細胞療法、
+        KRAS野生型/変異型で層別化した通常化学療法など)を大量に含み、Phase1–3だけで2,000件超がヒットするためノイズが極めて多いです。
+        本ダッシュボードでは主要な直接的KRAS阻害薬・分解薬・SOS1/SHP2阻害薬(計16分子)について、各薬剤の一般名・開発コードで個別に
+        ClinicalTrials.govを検索し、分子ごとの試験数を集計。統計カードの「153件」は主要12分子のOR検索による重複除去後の件数です。
+      </p>
+      <ul>
+        <li>本ダッシュボードはリアルタイムでは更新されません。最新情報は必ずClinicalTrials.govなど一次情報源でご確認ください。</li>
+        <li>KRAS変異は膵癌・大腸癌・肺癌など固形腫瘍に多く、血液腫瘍・軟部肉腫における直接的KRAS阻害薬の試験は非常に少数です(下記「適応症別の内訳」参照)。</li>
+        <li>分子別の試験数は手作業による概算集計であり、複数薬剤の併用試験は重複カウントされる場合があります。</li>
+        <li>SOS1阻害薬・SHP2阻害薬はKRAS変異細胞を直接標的としない“併用増強”戦略のため、参考枠として掲載しています。</li>
+      </ul>
+    </div>
+  </details>
+
+  <section>
+    <h2>分子別 開発パイプライン</h2>
+    <p class="section-note">バーの長さ=到達済み最高段階。試験数リンクはClinicalTrials.govの検索結果へ。開発中止は赤マーカーで表示。</p>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--dot1)"></span>G12C選択的</span>
+      <span><span class="dot" style="background:var(--dot2)"></span>G12D選択的</span>
+      <span><span class="dot" style="background:var(--dot3)"></span>Pan-RAS/Pan-KRAS 多選択的</span>
+      <span><span class="dot" style="background:var(--dot4)"></span>SOS1阻害薬</span>
+      <span><span class="dot" style="background:var(--dot5)"></span>SHP2阻害薬</span>
+    </div>
+    <div class="pipeline">
+      <table class="pipe" id="pipeTable">
+        <thead>
+          <tr><th>分子</th><th>標的</th><th>開発段階</th><th>主な適応症</th><th>試験数</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>承認・規制タイムライン</h2>
+    <p class="section-note">KRAS阻害薬クラス全体における主要な承認・データ発表・規制イベント</p>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <section>
+    <h2>適応症別の内訳</h2>
+    <div class="indications">
+      <div class="ind-card">
+        <h4>固形腫瘍(大部分を占める)</h4>
+        <div class="ind-row"><span>非小細胞肺癌(NSCLC)</span><b>最多・承認薬の主戦場</b></div>
+        <div class="ind-row"><span>膵管腺癌(PDAC)</span><b>Daraxonrasib・HRS-4642等が最前線</b></div>
+        <div class="ind-row"><span>大腸癌(CRC)</span><b>抗EGFR抗体との併用が中心</b></div>
+        <div class="ind-row"><span>婦人科癌・胆道癌など</span><b>探索的コホート</b></div>
+      </div>
+      <div class="ind-card">
+        <h4>血液腫瘍・軟部肉腫(限定的)</h4>
+        <div class="ind-row"><span>若年性骨髄単球性白血病(JMML)</span><b>MEK阻害薬(トラメチニブ)中心</b></div>
+        <div class="ind-row"><span>急性骨髄性白血病(AML)・骨髄異形成症候群</span><b>探索段階・症例限定的</b></div>
+        <div class="ind-row"><span>軟部肉腫</span><b>KRAS変異頻度が低く直接的な阻害薬治験はほぼ無し</b></div>
+        <div class="ind-note">KRAS変異は血液腫瘍・軟部肉腫での頻度が低いため、直接的なKRAS阻害薬の臨床試験は同一酵素系(RAS/MAPK経路)を標的とするMEK阻害薬(トラメチニブ等)が中心で、EZH2阻害薬の場合ほど厚い血液腫瘍パイプラインは存在しません。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    本ダッシュボードはClaudeによる公開情報の手作業リサーチに基づく一時点スナップショットです（作成日: 2026年8月12日）。
+    臨床・投資判断には必ずClinicalTrials.govおよび各社の一次情報を確認してください。試験デザインの追加・変更・中止は頻繁に発生します。
+  </footer>
+
+</div>
+
+<script>
+const STAGES = ["前臨床","Phase1","Phase2","Phase3","承認"];
+const COLORS = {g12c:"#2b6cb0", g12d:"#c0752b", pan:"#1a7f5a", sos1:"#8e44ad", shp2:"#148f77"};
+const LABELS = {g12c:"G12C選択的", g12d:"G12D選択的", pan:"Pan-RAS/Pan-KRAS", sos1:"SOS1阻害薬", shp2:"SHP2阻害薬"};
+
+const molecules = [
+  {name:"Sotorasib", brand:"(Lumakras®)", company:"Amgen", target:"g12c",
+   stageIdx:4, terminated:false, badge:["承認(本承認は未達成)","b-caution"],
+   indications:"既治療のKRAS G12C変異NSCLC。sNDA却下により2028年2月までの確認試験完了が新要件に", trials:"64", nct:"sotorasib"},
+  {name:"Adagrasib", brand:"(Krazati®)", company:"Mirati Therapeutics / BMS", target:"g12c",
+   stageIdx:4, terminated:false, badge:["承認","b-approved"],
+   indications:"KRAS G12C変異NSCLC・大腸癌(セツキシマブ併用)", trials:"38", nct:"adagrasib"},
+  {name:"Garsorasib", brand:"(D-1553 / Fulzerasib)", company:"GenFleet / InxMed / Suncadia", target:"g12c",
+   stageIdx:4, terminated:false, badge:["承認(中国)","b-approved"],
+   indications:"KRAS G12C変異NSCLC。大腸癌でセツキシマブ併用データ", trials:"18", nct:"D-1553 OR garsorasib OR fulzerasib"},
+  {name:"Glecirasib", brand:"(JAB-21822)", company:"Jacobio Pharmaceuticals", target:"g12c",
+   stageIdx:4, terminated:false, badge:["承認(中国)","b-approved"],
+   indications:"KRAS G12C変異NSCLC", trials:"16", nct:"glecirasib OR JAB-21822"},
+  {name:"Divarasib", brand:"", company:"Roche / Genentech", target:"g12c",
+   stageIdx:3, terminated:false, badge:["Phase 3","b-p3"],
+   indications:"KRASCENDO-1試験でsotorasib/adagrasibに対しPFS・OS優越性データ、NSCLC", trials:"13", nct:"divarasib"},
+  {name:"Olomorasib", brand:"(LY3537982)", company:"Eli Lilly", target:"g12c",
+   stageIdx:3, terminated:false, badge:["Phase 3","b-p3"],
+   indications:"FDA Breakthrough Therapy指定。1次治療NSCLC(ペムブロリズマブ併用)", trials:"13", nct:"olomorasib"},
+  {name:"Opnurasib", brand:"(JDQ443)", company:"Novartis", target:"g12c",
+   stageIdx:3, terminated:true, badge:["開発中止","b-terminated"],
+   indications:"戦略的ポートフォリオ見直しによりPhase3 KontRASt-02含む全試験終了", trials:"8", nct:"JDQ443 OR opnurasib"},
+  {name:"Daraxonrasib", brand:"(RMC-6236)", company:"Revolution Medicines", target:"pan",
+   stageIdx:3, terminated:false, badge:["Phase 3(NDA申請方針)","b-p3"],
+   indications:"膵管腺癌でOS有意改善(vs化学療法)。NSCLC等マルチRAS変異腫瘍にも展開", trials:"15", nct:"RMC-6236 OR daraxonrasib"},
+  {name:"HRS-4642", brand:"", company:"江蘇恒瑞医薬(Hengrui)", target:"g12d",
+   stageIdx:3, terminated:false, badge:["Phase 3","b-p3"],
+   indications:"KRAS G12D変異膵癌の1次治療(AG療法併用、プラセボ対照)", trials:"19", nct:"HRS-4642"},
+  {name:"Zoldonrasib", brand:"(RMC-6291)", company:"Revolution Medicines", target:"g12c",
+   stageIdx:2, terminated:false, badge:["Phase 1/2","b-p12"],
+   indications:"次世代RAS(ON) G12C選択的阻害薬。固形腫瘍", trials:"5", nct:"RMC-6291 OR zoldonrasib"},
+  {name:"RMC-9805", brand:"", company:"Revolution Medicines", target:"g12d",
+   stageIdx:2, terminated:false, badge:["Phase 1/2","b-p12"],
+   indications:"RAS(ON) G12D選択的阻害薬。膵癌・大腸癌など", trials:"5", nct:"RMC-9805"},
+  {name:"ASP3082", brand:"(Setidegrasib)", company:"Astellas Pharma", target:"g12d",
+   stageIdx:2, terminated:false, badge:["Phase 1/2","b-p12"],
+   indications:"KRAS G12D標的タンパク分解薬(ORR約22%報告)。膵癌など", trials:"5", nct:"ASP3082 OR setidegrasib"},
+  {name:"MRTX1133", brand:"", company:"Mirati Therapeutics / BMS", target:"g12d",
+   stageIdx:2, terminated:false, badge:["Phase 1/2","b-p12"],
+   indications:"非共有結合型KRAS G12D選択的阻害薬。膵癌・大腸癌・NSCLC", trials:"1", nct:"MRTX1133"},
+  {name:"BLU-924", brand:"(SAR449336)", company:"Blueprint Medicines / Sanofi", target:"pan",
+   stageIdx:1, terminated:false, badge:["Phase 1(First-in-human)","b-p12"],
+   indications:"Pan-KRAS選択的阻害薬。PDAC・NSCLC・大腸癌", trials:"新規", nct:"BLU-924 OR SAR449336"},
+  {name:"BI-1701963", brand:"", company:"Boehringer Ingelheim", target:"sos1",
+   stageIdx:1, terminated:false, badge:["Phase 1(併用)","b-p12"],
+   indications:"SOS1阻害薬。adagrasib等G12C阻害薬との併用で耐性克服を狙う", trials:"6", nct:"BI-1701963"},
+  {name:"RMC-4630", brand:"", company:"Revolution Medicines", target:"shp2",
+   stageIdx:2, terminated:false, badge:["Phase 1/2(併用)","b-p12"],
+   indications:"SHP2阻害薬。sotorasib併用でORR改善(既治療27%・未治療50%)", trials:"6", nct:"RMC-4630"},
+];
+
+const tbody = document.querySelector("#pipeTable tbody");
+molecules.forEach(m=>{
+  const pct = (m.stageIdx/(STAGES.length-1))*100;
+  const color = COLORS[m.target];
+  const trialsHref = `https://clinicaltrials.gov/search?term=${encodeURIComponent(m.nct)}&aggFilters=phase:1%202%203`;
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><span class="dot" style="background:${color}; margin-right:6px;"></span>
+        <span class="mol">${m.name}</span> ${m.brand?`<span style="color:#9aa0a6;font-size:12px;">${m.brand}</span>`:""}
+        <span class="company">${m.company}</span></td>
+    <td style="font-size:12.5px; color:#5b5f66;">${LABELS[m.target]}</td>
+    <td>
+      <div class="stagebar">
+        <div class="fill" style="width:${pct}%; background:${color};"></div>
+        ${m.terminated?`<div class="wmark" style="left:${pct}%;">✕</div>`:""}
+      </div>
+      <div class="stagelabels">${STAGES.map(s=>`<span>${s}</span>`).join("")}</div>
+      <span class="badge ${m.badge[1]}">${m.badge[0]}</span>
+    </td>
+    <td style="font-size:12.5px; max-width:260px;">${m.indications}</td>
+    <td><a class="trials-link" target="_blank" rel="noopener" href="${trialsHref}">${m.trials}</a></td>
+  `;
+  tbody.appendChild(tr);
+});
+
+const events = [
+  {date:"2021年5月", tag:["FDA承認","tag-approval"], title:"Sotorasib（Lumakras）— 世界初のKRAS阻害薬として加速承認", body:"既治療のKRAS G12C変異NSCLCを対象にFDAが加速承認。"},
+  {date:"2022年12月", tag:["FDA承認","tag-approval"], title:"Adagrasib（Krazati）加速承認", body:"Mirati Therapeutics(現BMS)のG12C阻害薬がNSCLCで承認。後に大腸癌へも適応拡大。"},
+  {date:"2025年", tag:["承認(中国)","tag-approval"], title:"Garsorasib・Glecirasib、中国NMPAで承認", body:"次世代G12C阻害薬2剤が中国でKRAS G12C変異NSCLCに対し承認。"},
+  {date:"2025〜26年", tag:["開発中止","tag-safety"], title:"Novartis、Opnurasib(JDQ443)の開発中止", body:"戦略的ポートフォリオ見直しによりPhase3 KontRASt-02含む全試験を終了。"},
+  {date:"2026年", tag:["規制","tag-reg"], title:"Sotorasibの本承認申請をFDAが却下", body:"追加の確認的臨床試験を2028年2月までに完了することが新たな市販後要求に。加速承認自体は維持。"},
+  {date:"2026年", tag:["Phase3データ","tag-data"], title:"Divarasib、KRASCENDO-1試験でPFS・OS優越性", body:"既治療KRAS G12C変異NSCLCにおいてsotorasib/adagrasibに対する優越性を確認。"},
+  {date:"2026年4〜5月", tag:["Phase3データ・NDA方針","tag-data"], title:"Daraxonrasib、膵癌でOS有意改善しNDA申請方針を表明", body:"化学療法比較でOS中央値13.2ヶ月 vs 6.7ヶ月(死亡リスク60%減)。優先審査バウチャー制度でのNDA申請意向を表明、拡大アクセスプログラムも開始。"},
+];
+document.getElementById("timeline").innerHTML = events.map(e=>`
+  <div class="tl-item">
+    <div class="tl-date">${e.date}</div>
+    <div class="tl-body">
+      <h4>${e.title}<span class="tl-tag ${e.tag[1]}">${e.tag[0]}</span></h4>
+      <p>${e.body}</p>
+    </div>
+  </div>
+`).join("");
+</script>
+
+</body>
+</html>
